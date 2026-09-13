@@ -74,7 +74,9 @@ input[type="range"] { width: 100%; accent-color: var(--s1); }
 .chips button:focus-visible, .btn:focus-visible, .seg button:focus-visible { outline: 2px solid var(--s1); outline-offset: 1px; }
 .grid-in { display: grid; gap: 6px 8px; align-items: center; font-size: 13px; }
 .grid-in.spend { grid-template-columns: 1fr 104px 48px; }
-.grid-in.mult { grid-template-columns: 1fr 56px 56px 56px; }
+.grid-in.mult { grid-template-columns: 1fr 62px 62px 62px; }
+.grid-in input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.grid-in input[type="number"]::-webkit-outer-spin-button, .grid-in input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .grid-in.two-col { grid-template-columns: 1fr 104px; }
 .grid-in .h { font-size: 11px; color: var(--muted); font-family: var(--mono); text-align: right; }
 .grid-in .h:first-child { text-align: left; }
@@ -96,7 +98,8 @@ main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .kpi .big { font-size: 28px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .kpi .big .chg { font-size: 14px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--callout); white-space: nowrap; }
 .kpi .rng { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 8px; }
-.kpi .rng b { font-weight: 600; color: var(--ink); }
+.kpi .rng b { font-weight: 600; color: var(--ink); white-space: nowrap; }
+.kpi .rng span:first-child { min-width: 0; }
 .pos { color: var(--up); } .neg { color: var(--down); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); align-items: center; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -172,6 +175,20 @@ ul.assume { margin: 0; padding-left: 18px; display: flex; flex-direction: column
         <label class="lbl">Signup-day GMV per $1 of spend</label>
         <p class="hint">Expected uses the latest week. Low and high span the last four weeks and drive the min-max range.</p>
         <div class="grid-in mult" id="multGrid"></div>
+      </div>
+
+      <div class="group">
+        <label class="lbl">Diminishing returns</label>
+        <div class="chips" id="drChips"></div>
+        <div class="grid-in mult">
+          <span class="h">&nbsp;</span><span class="h">expected</span><span class="h">low</span><span class="h">high</span>
+          <span>Scaling exponent</span>
+          <input id="bExp" type="number" step="0.05" min="0.1" max="1.2" aria-label="Scaling exponent expected">
+          <input id="bLo" type="number" step="0.05" min="0.1" max="1.2" aria-label="Scaling exponent low">
+          <input id="bHi" type="number" step="0.05" min="0.1" max="1.2" aria-label="Scaling exponent high">
+        </div>
+        <p class="hint" id="drHint"></p>
+        <div class="grid-in mult" id="drTable"></div>
       </div>
 
       <div class="group">
@@ -265,7 +282,7 @@ ul.assume { margin: 0; padding-left: 18px; display: flex; flex-direction: column
       <div class="panel">
         <h2>What the model assumes</h2>
         <ul class="assume">
-          <li><b>Returns hold at today's levels.</b> Each extra dollar buys the same signup-day GMV as the latest week, with no saturation. Real channels get more expensive as they scale, so large increases are optimistic. TikTok spend per signup already doubled from $7 to $16 as spend grew 7.5x.</li>
+          <li><b>Returns hold at today's levels unless diminishing returns is on.</b> With it off, each extra dollar buys the same signup-day GMV as the latest week. With it on, each channel's new-user GMV = multiple × reference spend × (spend ÷ reference)^exponent, where the reference is the channel's current spend (Meta: its last clean week). TikTok spend per signup already doubled from $7 to $16 as spend grew 7.5x, although GMV per signup rose to match.</li>
           <li><b>Apple Search Ads is demand-capped.</b> It already underspends its budget, so adding budget there buys bids, not volume.</li>
           <li><b>Channel returns use DB first-touch attribution, which misses some paid signups.</b> Those users sit in organic, so organic lift partly stands in for unrecorded paid users.</li>
           <li><b>Meta and Liftoff are $0 by default.</b> Meta is restricted; its multiple is the last clean read (Aug 30-Sep 1). Liftoff has no spend data, so its multiple is a placeholder.</li>
@@ -278,7 +295,7 @@ ul.assume { margin: 0; padding-left: 18px; display: flex; flex-direction: column
 </div>
 
 <script>
-const M = {"proj_start":"2026-09-13","h_max":90,"existing":[185893,168820,159951,152032,144643,139261,134875,131173,127996,124841,122028,119430,117136,115123,112974,110889,109084,107412,105920,104563,103296,102371,101482,100644,100053,99327,98635,98080,97361,96730,96101,95352,94630,93924,93272,92712,92037,91271,90674,90220,89822,89231,88560,88242,88074,87809,87430,87027,86731,86652,86401,86237,85952,85755,85707,85847,85874,85790,85633,85422,85383,85377,85133,84782,84390,84127,84053,83844,83584,83527,83596,83880,83978,83716,83523,83422,83295,83164,82909,82537,82232,82069,81849,81533,81063,80614,80446,80345,80081,79743],"curves":{"Meta":[1.0,0.16522,0.08572,0.07845,0.07335,0.05407,0.04571,0.04047,0.03565,0.03238,0.02986,0.02799,0.02676,0.02466,0.02359,0.02258,0.02164,0.02105,0.01892,0.01845,0.01748,0.01822,0.01802,0.01786,0.0169,0.01703,0.01738,0.01782,0.01609,0.01507,0.01453,0.01512,0.01491,0.01361,0.01289,0.01276,0.01265,0.0127,0.01156,0.01126,0.01121,0.01086,0.0111,0.01106,0.01049,0.01125,0.01134,0.01076,0.01057,0.01036,0.01025,0.01029,0.00934,0.00906,0.0093,0.01058,0.01018,0.00987,0.01051,0.01253,0.01416,0.01382,0.01513,0.01523,0.01588,0.01486,0.01289,0.01128,0.01126,0.00974,0.01047,0.00992,0.00982,0.01017,0.00951,0.00975,0.00847,0.00725,0.00769,0.00749,0.00681,0.00669,0.00714,0.00947,0.0122,0.01232,0.01268,0.01355,0.01371,0.01268],"TikTok":[1.0,0.15738,0.07862,0.07036,0.06448,0.04543,0.03798,0.03209,0.03007,0.0291,0.02706,0.02539,0.02421,0.02029,0.02032,0.01895,0.01848,0.0179,0.01637,0.01533,0.01544,0.01385,0.01165,0.01038,0.01004,0.01142,0.01157,0.01236,0.01267,0.01273,0.01282,0.01213,0.0113,0.01127,0.00992,0.00885,0.00914,0.00808,0.00829,0.00813,0.00833,0.00809,0.00793,0.00706,0.00813,0.00825,0.00868,0.00851,0.00792,0.00665,0.00659,0.0061,0.00616,0.00546,0.00442,0.0056,0.00712,0.00743,0.00733,0.00755,0.00753,0.00696,0.00732,0.00761,0.00779,0.00749,0.00717,0.00721,0.00755,0.0074,0.00714,0.00684,0.00663,0.00676,0.00616,0.00577,0.0052,0.00529,0.00543,0.00593,0.00598,0.0061,0.0063,0.007,0.00776,0.008,0.00783,0.00783,0.00755,0.00784],"ASA":[1.0,0.14192,0.07526,0.0686,0.0636,0.04756,0.03862,0.03321,0.03104,0.02816,0.02578,0.02364,0.02124,0.02024,0.01858,0.01571,0.01569,0.01347,0.01165,0.01286,0.0126,0.01118,0.01118,0.00917,0.013,0.01358,0.01165,0.01097,0.01094,0.01064,0.01062,0.00664,0.00569,0.00489,0.00678,0.00545,0.0084,0.00842,0.0086,0.00894,0.00962,0.00745,0.00792,0.00705,0.00719,0.00682,0.00637,0.00839,0.00877,0.00998,0.00839,0.00836,0.0083,0.00812,0.00512,0.0042,0.00279,0.00218,0.00099,0.00119,0.00622,0.00606,0.00638,0.00663,0.00679,0.00653,0.00625,0.00628,0.00657,0.00645,0.00622,0.00596,0.00578,0.00589,0.00536,0.00502,0.00453,0.00461,0.00473,0.00517,0.00521,0.00532,0.00549,0.0061,0.00676,0.00697,0.00682,0.00682,0.00658,0.00683],"Snapchat":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Liftoff":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Referral":[1.0,0.14784,0.07899,0.07102,0.06472,0.04731,0.04027,0.03479,0.02806,0.02579,0.02647,0.02741,0.02588,0.0228,0.0216,0.02103,0.01827,0.01568,0.01316,0.01386,0.01414,0.01402,0.01294,0.01271,0.01099,0.0097,0.0077,0.00695,0.00672,0.00663,0.0066,0.00687,0.00693,0.00669,0.00725,0.00787,0.00717,0.0069,0.00671,0.0063,0.00581,0.00548,0.00448,0.00478,0.00452,0.00391,0.00345,0.00338,0.00286,0.003,0.00292,0.00298,0.0036,0.00428,0.00419,0.00335,0.00371,0.0029,0.00289,0.00252,0.0024,0.00339,0.00342,0.00489,0.00728,0.00942,0.00931,0.01174,0.0117,0.01176,0.00978,0.00777,0.00551,0.00555,0.00253,0.00196,0.00214,0.00208,0.00348,0.00498,0.00523,0.0061,0.00692,0.0061,0.00677,0.00697,0.00683,0.00683,0.00658,0.00683],"Organic":[1.0,0.16399,0.08496,0.0784,0.07342,0.05531,0.04691,0.04137,0.03744,0.0339,0.03102,0.02881,0.02669,0.02551,0.02406,0.02252,0.02143,0.02048,0.01941,0.01876,0.01785,0.0176,0.01773,0.01703,0.01629,0.0153,0.01465,0.01509,0.01452,0.01377,0.0138,0.0131,0.01316,0.01277,0.01169,0.0124,0.01263,0.01221,0.01307,0.01309,0.01329,0.01432,0.01416,0.01358,0.01337,0.01272,0.01217,0.01154,0.01009,0.00911,0.00899,0.00905,0.00886,0.0089,0.00915,0.00934,0.0092,0.00921,0.00915,0.00898,0.00859,0.00828,0.00843,0.00898,0.00893,0.00861,0.00889,0.00959,0.01035,0.01067,0.00979,0.0095,0.00923,0.00934,0.00848,0.00752,0.00699,0.00783,0.00784,0.00895,0.00935,0.00964,0.00983,0.01016,0.0104,0.01089,0.01037,0.00996,0.0093,0.01042]},"defaults":{"spend":{"Meta":0,"TikTok":16050,"ASA":195,"Snapchat":1009,"Liftoff":0},"mult_weekly":{"Meta":[2.36,1.88,0.78,0.13],"TikTok":[4.11,2.94,4.08,3.83],"ASA":[11.83,14.69,18.49,11.67],"Snapchat":[null,null,1.63,0.36],"Liftoff":[null,null,null,null]},"organic_d0":32010,"referral_d0":4024,"organic_signups":500,"last7_spend":{"Meta":8693,"TikTok":13036,"ASA":222,"Snapchat":829,"Liftoff":0},"meta_clean_mult":1.78},"k_weekly":[{"week_start":"2026-06-07","k":1.089},{"week_start":"2026-06-14","k":1.137},{"week_start":"2026-06-21","k":1.026},{"week_start":"2026-06-28","k":0.997},{"week_start":"2026-07-05","k":1.047},{"week_start":"2026-07-12","k":1.071},{"week_start":"2026-07-19","k":0.905},{"week_start":"2026-07-26","k":0.99},{"week_start":"2026-08-02","k":0.839},{"week_start":"2026-08-09","k":0.868},{"week_start":"2026-08-16","k":0.946},{"week_start":"2026-08-23","k":1.026},{"week_start":"2026-08-30","k":0.993},{"week_start":"2026-09-06","k":0.736}],"k_recent":0.736,"error_by_h_cal":{"7":{"n":11,"mape":0.0716,"bias":-0.0685,"max_abs":0.208,"p80_abs":0.1102},"14":{"n":11,"mape":0.1118,"bias":-0.0836,"max_abs":0.2819,"p80_abs":0.1553},"21":{"n":10,"mape":0.1511,"bias":-0.1249,"max_abs":0.311,"p80_abs":0.2042},"28":{"n":9,"mape":0.1873,"bias":-0.1761,"max_abs":0.3456,"p80_abs":0.2391}},"recent_actual":[{"day":"2026-07-30","gmv":197517.0},{"day":"2026-07-31","gmv":229417.0},{"day":"2026-08-01","gmv":194246.0},{"day":"2026-08-02","gmv":202005.0},{"day":"2026-08-03","gmv":192159.0},{"day":"2026-08-04","gmv":183604.0},{"day":"2026-08-05","gmv":224521.0},{"day":"2026-08-06","gmv":258879.0},{"day":"2026-08-07","gmv":262245.0},{"day":"2026-08-08","gmv":220431.0},{"day":"2026-08-09","gmv":229064.0},{"day":"2026-08-10","gmv":230606.0},{"day":"2026-08-11","gmv":263374.0},{"day":"2026-08-12","gmv":264849.0},{"day":"2026-08-13","gmv":265551.0},{"day":"2026-08-14","gmv":289460},{"day":"2026-08-15","gmv":322623},{"day":"2026-08-16","gmv":283246},{"day":"2026-08-17","gmv":252589},{"day":"2026-08-18","gmv":250772},{"day":"2026-08-19","gmv":327709},{"day":"2026-08-20","gmv":403944},{"day":"2026-08-21","gmv":382376},{"day":"2026-08-22","gmv":285339},{"day":"2026-08-23","gmv":292247},{"day":"2026-08-24","gmv":264819},{"day":"2026-08-25","gmv":325973},{"day":"2026-08-26","gmv":358156},{"day":"2026-08-27","gmv":383035},{"day":"2026-08-28","gmv":359434},{"day":"2026-08-29","gmv":366124},{"day":"2026-08-30","gmv":393681},{"day":"2026-08-31","gmv":340807},{"day":"2026-09-01","gmv":395835},{"day":"2026-09-02","gmv":403901},{"day":"2026-09-03","gmv":389453},{"day":"2026-09-04","gmv":379911},{"day":"2026-09-05","gmv":360278},{"day":"2026-09-06","gmv":294051},{"day":"2026-09-07","gmv":288639},{"day":"2026-09-08","gmv":220183},{"day":"2026-09-09","gmv":226261},{"day":"2026-09-10","gmv":254584},{"day":"2026-09-11","gmv":262789},{"day":"2026-09-12","gmv":245830}]};
+const M = {"proj_start":"2026-09-13","h_max":90,"existing":[185893,168820,159951,152032,144643,139261,134875,131173,127996,124841,122028,119430,117136,115123,112974,110889,109084,107412,105920,104563,103296,102371,101482,100644,100053,99327,98635,98080,97361,96730,96101,95352,94630,93924,93272,92712,92037,91271,90674,90220,89822,89231,88560,88242,88074,87809,87430,87027,86731,86652,86401,86237,85952,85755,85707,85847,85874,85790,85633,85422,85383,85377,85133,84782,84390,84127,84053,83844,83584,83527,83596,83880,83978,83716,83523,83422,83295,83164,82909,82537,82232,82069,81849,81533,81063,80614,80446,80345,80081,79743],"curves":{"Meta":[1.0,0.16522,0.08572,0.07845,0.07335,0.05407,0.04571,0.04047,0.03565,0.03238,0.02986,0.02799,0.02676,0.02466,0.02359,0.02258,0.02164,0.02105,0.01892,0.01845,0.01748,0.01822,0.01802,0.01786,0.0169,0.01703,0.01738,0.01782,0.01609,0.01507,0.01453,0.01512,0.01491,0.01361,0.01289,0.01276,0.01265,0.0127,0.01156,0.01126,0.01121,0.01086,0.0111,0.01106,0.01049,0.01125,0.01134,0.01076,0.01057,0.01036,0.01025,0.01029,0.00934,0.00906,0.0093,0.01058,0.01018,0.00987,0.01051,0.01253,0.01416,0.01382,0.01513,0.01523,0.01588,0.01486,0.01289,0.01128,0.01126,0.00974,0.01047,0.00992,0.00982,0.01017,0.00951,0.00975,0.00847,0.00725,0.00769,0.00749,0.00681,0.00669,0.00714,0.00947,0.0122,0.01232,0.01268,0.01355,0.01371,0.01268],"TikTok":[1.0,0.15738,0.07862,0.07036,0.06448,0.04543,0.03798,0.03209,0.03007,0.0291,0.02706,0.02539,0.02421,0.02029,0.02032,0.01895,0.01848,0.0179,0.01637,0.01533,0.01544,0.01385,0.01165,0.01038,0.01004,0.01142,0.01157,0.01236,0.01267,0.01273,0.01282,0.01213,0.0113,0.01127,0.00992,0.00885,0.00914,0.00808,0.00829,0.00813,0.00833,0.00809,0.00793,0.00706,0.00813,0.00825,0.00868,0.00851,0.00792,0.00665,0.00659,0.0061,0.00616,0.00546,0.00442,0.0056,0.00712,0.00743,0.00733,0.00755,0.00753,0.00696,0.00732,0.00761,0.00779,0.00749,0.00717,0.00721,0.00755,0.0074,0.00714,0.00684,0.00663,0.00676,0.00616,0.00577,0.0052,0.00529,0.00543,0.00593,0.00598,0.0061,0.0063,0.007,0.00776,0.008,0.00783,0.00783,0.00755,0.00784],"ASA":[1.0,0.14192,0.07526,0.0686,0.0636,0.04756,0.03862,0.03321,0.03104,0.02816,0.02578,0.02364,0.02124,0.02024,0.01858,0.01571,0.01569,0.01347,0.01165,0.01286,0.0126,0.01118,0.01118,0.00917,0.013,0.01358,0.01165,0.01097,0.01094,0.01064,0.01062,0.00664,0.00569,0.00489,0.00678,0.00545,0.0084,0.00842,0.0086,0.00894,0.00962,0.00745,0.00792,0.00705,0.00719,0.00682,0.00637,0.00839,0.00877,0.00998,0.00839,0.00836,0.0083,0.00812,0.00512,0.0042,0.00279,0.00218,0.00099,0.00119,0.00622,0.00606,0.00638,0.00663,0.00679,0.00653,0.00625,0.00628,0.00657,0.00645,0.00622,0.00596,0.00578,0.00589,0.00536,0.00502,0.00453,0.00461,0.00473,0.00517,0.00521,0.00532,0.00549,0.0061,0.00676,0.00697,0.00682,0.00682,0.00658,0.00683],"Snapchat":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Liftoff":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Referral":[1.0,0.14784,0.07899,0.07102,0.06472,0.04731,0.04027,0.03479,0.02806,0.02579,0.02647,0.02741,0.02588,0.0228,0.0216,0.02103,0.01827,0.01568,0.01316,0.01386,0.01414,0.01402,0.01294,0.01271,0.01099,0.0097,0.0077,0.00695,0.00672,0.00663,0.0066,0.00687,0.00693,0.00669,0.00725,0.00787,0.00717,0.0069,0.00671,0.0063,0.00581,0.00548,0.00448,0.00478,0.00452,0.00391,0.00345,0.00338,0.00286,0.003,0.00292,0.00298,0.0036,0.00428,0.00419,0.00335,0.00371,0.0029,0.00289,0.00252,0.0024,0.00339,0.00342,0.00489,0.00728,0.00942,0.00931,0.01174,0.0117,0.01176,0.00978,0.00777,0.00551,0.00555,0.00253,0.00196,0.00214,0.00208,0.00348,0.00498,0.00523,0.0061,0.00692,0.0061,0.00677,0.00697,0.00683,0.00683,0.00658,0.00683],"Organic":[1.0,0.16399,0.08496,0.0784,0.07342,0.05531,0.04691,0.04137,0.03744,0.0339,0.03102,0.02881,0.02669,0.02551,0.02406,0.02252,0.02143,0.02048,0.01941,0.01876,0.01785,0.0176,0.01773,0.01703,0.01629,0.0153,0.01465,0.01509,0.01452,0.01377,0.0138,0.0131,0.01316,0.01277,0.01169,0.0124,0.01263,0.01221,0.01307,0.01309,0.01329,0.01432,0.01416,0.01358,0.01337,0.01272,0.01217,0.01154,0.01009,0.00911,0.00899,0.00905,0.00886,0.0089,0.00915,0.00934,0.0092,0.00921,0.00915,0.00898,0.00859,0.00828,0.00843,0.00898,0.00893,0.00861,0.00889,0.00959,0.01035,0.01067,0.00979,0.0095,0.00923,0.00934,0.00848,0.00752,0.00699,0.00783,0.00784,0.00895,0.00935,0.00964,0.00983,0.01016,0.0104,0.01089,0.01037,0.00996,0.0093,0.01042]},"defaults":{"spend":{"Meta":0,"TikTok":16050,"ASA":195,"Snapchat":1009,"Liftoff":0},"mult_weekly":{"Meta":[2.36,1.88,0.78,0.13],"TikTok":[4.11,2.94,4.08,3.83],"ASA":[11.83,14.69,18.49,11.67],"Snapchat":[null,null,1.63,0.36],"Liftoff":[null,null,null,null]},"organic_d0":32010,"referral_d0":4024,"organic_signups":500,"last7_spend":{"Meta":8693,"TikTok":13036,"ASA":222,"Snapchat":829,"Liftoff":0},"meta_clean_mult":1.78},"k_weekly":[{"week_start":"2026-06-07","k":1.089},{"week_start":"2026-06-14","k":1.137},{"week_start":"2026-06-21","k":1.026},{"week_start":"2026-06-28","k":0.997},{"week_start":"2026-07-05","k":1.047},{"week_start":"2026-07-12","k":1.071},{"week_start":"2026-07-19","k":0.905},{"week_start":"2026-07-26","k":0.99},{"week_start":"2026-08-02","k":0.839},{"week_start":"2026-08-09","k":0.868},{"week_start":"2026-08-16","k":0.946},{"week_start":"2026-08-23","k":1.026},{"week_start":"2026-08-30","k":0.993},{"week_start":"2026-09-06","k":0.736}],"k_recent":0.736,"error_by_h_cal":{"7":{"n":11,"mape":0.0716,"bias":-0.0685,"max_abs":0.208,"p80_abs":0.1102},"14":{"n":11,"mape":0.1118,"bias":-0.0836,"max_abs":0.2819,"p80_abs":0.1553},"21":{"n":10,"mape":0.1511,"bias":-0.1249,"max_abs":0.311,"p80_abs":0.2042},"28":{"n":9,"mape":0.1873,"bias":-0.1761,"max_abs":0.3456,"p80_abs":0.2391}},"recent_actual":[{"day":"2026-07-30","gmv":197517.0},{"day":"2026-07-31","gmv":229417.0},{"day":"2026-08-01","gmv":194246.0},{"day":"2026-08-02","gmv":202005.0},{"day":"2026-08-03","gmv":192159.0},{"day":"2026-08-04","gmv":183604.0},{"day":"2026-08-05","gmv":224521.0},{"day":"2026-08-06","gmv":258879.0},{"day":"2026-08-07","gmv":262245.0},{"day":"2026-08-08","gmv":220431.0},{"day":"2026-08-09","gmv":229064.0},{"day":"2026-08-10","gmv":230606.0},{"day":"2026-08-11","gmv":263374.0},{"day":"2026-08-12","gmv":264849.0},{"day":"2026-08-13","gmv":265551.0},{"day":"2026-08-14","gmv":289460},{"day":"2026-08-15","gmv":322623},{"day":"2026-08-16","gmv":283246},{"day":"2026-08-17","gmv":252589},{"day":"2026-08-18","gmv":250772},{"day":"2026-08-19","gmv":327709},{"day":"2026-08-20","gmv":403944},{"day":"2026-08-21","gmv":382376},{"day":"2026-08-22","gmv":285339},{"day":"2026-08-23","gmv":292247},{"day":"2026-08-24","gmv":264819},{"day":"2026-08-25","gmv":325973},{"day":"2026-08-26","gmv":358156},{"day":"2026-08-27","gmv":383035},{"day":"2026-08-28","gmv":359434},{"day":"2026-08-29","gmv":366124},{"day":"2026-08-30","gmv":393681},{"day":"2026-08-31","gmv":340807},{"day":"2026-09-01","gmv":395835},{"day":"2026-09-02","gmv":403901},{"day":"2026-09-03","gmv":389453},{"day":"2026-09-04","gmv":379911},{"day":"2026-09-05","gmv":360278},{"day":"2026-09-06","gmv":294051},{"day":"2026-09-07","gmv":288639},{"day":"2026-09-08","gmv":220183},{"day":"2026-09-09","gmv":226261},{"day":"2026-09-10","gmv":254584},{"day":"2026-09-11","gmv":262789},{"day":"2026-09-12","gmv":245830}],"elasticity":{"meta_ref_spend":22599,"fits":{"TikTok":{"b":1.144,"r2":0.953,"se":0.09,"n":10,"spend_range":[3691,91250]},"Meta":{"b":1.346,"r2":0.913,"se":0.132,"n":12,"spend_range":[27677,154714]},"Blended":{"b":1.319,"r2":0.963,"se":0.082,"n":12,"spend_range":[28151,179802]}},"suggested":{"exp":0.72,"lo":0.44,"hi":1.0}}};
 
 const CHS = [
   { key: "TikTok", label: "TikTok", color: "var(--s2)" },
@@ -331,6 +348,7 @@ function defaults() {
   return {
     spend: Object.assign({}, SPEND0), mult,
     e: { exp: 0.5, lo: 0.25, hi: 1.0 },
+    b: { exp: 1, lo: 1, hi: 1 },
     k: { exp: k, lo: Math.round((k - 0.09) * 100) / 100, hi: Math.round((k + 0.09) * 100) / 100 },
     orgBase: M.defaults.organic_d0 + M.defaults.referral_d0,
     horizon: 60, margin: 12,
@@ -348,6 +366,7 @@ function sanitize(raw) {
   ["exp", "lo", "hi"].forEach(w => {
     out.e[w] = num(raw.e && raw.e[w], d.e[w]);
     out.k[w] = num(raw.k && raw.k[w], d.k[w]);
+    out.b[w] = Math.min(1.2, Math.max(0.1, num(raw.b && raw.b[w], d.b[w])));
   });
   out.orgBase = num(raw.orgBase, d.orgBase);
   out.horizon = [30, 60, 90].includes(raw.horizon) ? raw.horizon : d.horizon;
@@ -385,6 +404,20 @@ Object.keys(M.curves).forEach(c => {
 });
 const orgShare = M.defaults.organic_d0 / (M.defaults.organic_d0 + M.defaults.referral_d0);
 
+const ELAS = M.elasticity || null;
+const REF = {};
+CHS.forEach(c => { REF[c.key] = SPEND0[c.key]; });
+REF.Meta = (ELAS && ELAS.meta_ref_spend) || 22600;
+function exponentFor(p, which, above) {
+  if (which === "exp") return p.b.exp;
+  if (which === "lo") return above ? p.b.lo : p.b.hi;
+  return above ? p.b.hi : p.b.lo;
+}
+function effectiveSpend(p, which, key, s) {
+  const ref = REF[key];
+  if (!(ref > 0) || !(s > 0)) return s;
+  return ref * Math.pow(s / ref, exponentFor(p, which, s >= ref));
+}
 function run(p, which, spend) {
   const total = totalOf(spend);
   const k = p.k[which];
@@ -393,7 +426,7 @@ function run(p, which, spend) {
   const f = Math.max(0.25, 1 + e * (S0 ? total / S0 - 1 : 0));
   const orgD0 = p.orgBase * f;
   const d0 = {};
-  CHS.forEach(c => { d0[c.key] = (+spend[c.key] || 0) * p.mult[c.key][which]; });
+  CHS.forEach(c => { d0[c.key] = effectiveSpend(p, which, c.key, +spend[c.key] || 0) * p.mult[c.key][which]; });
   const gmv = [], parts = [];
   for (let h = 0; h < H_MAX; h++) {
     const existing = k * M.existing[h];
@@ -484,6 +517,16 @@ function buildControls() {
   $("totalRange").addEventListener("input", () => { scaleSpend(+$("totalRange").value); syncChannels(); $("total").value = totalOf(P.spend); update(); });
   [["eExp", "e", "exp"], ["eLo", "e", "lo"], ["eHi", "e", "hi"], ["kExp", "k", "exp"], ["kLo", "k", "lo"], ["kHi", "k", "hi"]].forEach(([id, g, w]) =>
     $(id).addEventListener("input", () => { P[g][w] = Math.max(0, +$(id).value || 0); update(); }));
+  [["bExp", "exp"], ["bLo", "lo"], ["bHi", "hi"]].forEach(([id, w]) =>
+    $(id).addEventListener("input", () => { P.b[w] = Math.min(1.2, Math.max(0.1, +$(id).value || 1)); update(); }));
+  const presets = [["Off", 1, 1, 1], ["Mild", 0.85, 0.75, 0.95], ["Moderate", 0.7, 0.6, 0.8], ["Strong", 0.55, 0.45, 0.65]];
+  if (ELAS && ELAS.suggested) presets.push([`Our data (${ELAS.suggested.exp.toFixed(2)})`, ELAS.suggested.exp, ELAS.suggested.lo, ELAS.suggested.hi]);
+  $("drChips").innerHTML = presets.map(([l, e, lo, hi]) => `<button type="button" data-b="${e},${lo},${hi}">${l}</button>`).join("");
+  $("drChips").addEventListener("click", ev => {
+    const btn = ev.target.closest("button[data-b]"); if (!btn) return;
+    const [e, lo, hi] = btn.dataset.b.split(",").map(Number);
+    P.b = { exp: e, lo, hi }; sync(); update();
+  });
   $("orgBase").addEventListener("input", () => { P.orgBase = Math.max(0, +$("orgBase").value || 0); update(); });
   $("margin").addEventListener("input", () => { P.margin = Math.min(100, Math.max(0, +$("margin").value || 0)); update(); });
   document.querySelectorAll("[data-h]").forEach(b => b.addEventListener("click", () => { P.horizon = +b.dataset.h; sync(); update(); }));
@@ -496,12 +539,39 @@ function sync() {
   syncTotal(); syncChannels();
   document.querySelectorAll("#multGrid [data-mult]").forEach(i => { i.value = P.mult[i.dataset.mult][i.dataset.w]; });
   $("eExp").value = P.e.exp; $("eLo").value = P.e.lo; $("eHi").value = P.e.hi;
+  $("bExp").value = P.b.exp; $("bLo").value = P.b.lo; $("bHi").value = P.b.hi;
   $("kExp").value = P.k.exp; $("kLo").value = P.k.lo; $("kHi").value = P.k.hi;
   $("orgBase").value = Math.round(P.orgBase); $("margin").value = P.margin;
   document.querySelectorAll("[data-h]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.h === P.horizon)));
 }
 
 // ---------- outputs ----------
+function renderDr() {
+  const b = P.b.exp;
+  const off = Math.abs(b - 1) < 1e-9;
+  document.querySelectorAll("#drChips button").forEach(btn => {
+    const [e, lo, hi] = btn.dataset.b.split(",").map(Number);
+    btn.setAttribute("aria-pressed", String(e === P.b.exp && lo === P.b.lo && hi === P.b.hi));
+    btn.style.background = btn.getAttribute("aria-pressed") === "true" ? "var(--ink)" : "";
+    btn.style.color = btn.getAttribute("aria-pressed") === "true" ? "var(--surface)" : "";
+  });
+  const fitNote = ELAS && ELAS.suggested ? ` Our spend history fits about ${ELAS.suggested.exp.toFixed(2)}.` : "";
+  $("drHint").textContent = off
+    ? `Off: every extra dollar earns today's return. Set an exponent below 1 to make returns shrink as a channel scales past its reference spend.${fitNote}`
+    : `Doubling a channel's spend grows its new-user GMV ${Math.pow(2, b).toFixed(2)}x instead of 2x; tripling gives ${Math.pow(3, b).toFixed(2)}x. Cutting spend loses proportionally less.${fitNote}`;
+  let h = `<span class="h">channel · reference</span><span class="h">spend</span><span class="h">avg $1</span><span class="h">next $1</span>`;
+  CHS.forEach(c => {
+    const s = +P.spend[c.key] || 0, ref = REF[c.key], m = P.mult[c.key].exp;
+    if (!(s > 0)) return;
+    const ratio = ref > 0 ? s / ref : 1;
+    const avg = ref > 0 ? m * Math.pow(ratio, b - 1) : m;
+    const marg = ref > 0 ? m * b * Math.pow(ratio, b - 1) : m;
+    h += `<span class="name"><i style="background:${c.color}"></i>${c.label} · ${ref > 0 ? fmtK(ref) : "no ref"}</span>
+      <span class="val">${fmtK(s)}</span><span class="val">${avg.toFixed(2)}x</span><span class="val">${marg.toFixed(2)}x</span>`;
+  });
+  $("drTable").innerHTML = h;
+}
+
 function renderShares() {
   const t = totalOf(P.spend);
   CHS.forEach(c => {
@@ -534,11 +604,10 @@ function renderKpis(R) {
     <div class="kpi"><div class="k">vs. current spend (${fmt$(S0)}/day)</div><div class="big ${sign(dGmv)}">${plus(dGmv)}${fmtK(dGmv)}</div>
       <div class="rng"><span>Ad spend change</span><b>${plus(dSpend)}${fmtK(dSpend)}</b></div>
       <div class="rng"><span>Day ${N} run-rate change</span><b class="${sign(endExp - endBase)}">${plus(endExp - endBase)}${fmtK(endExp - endBase)}/day</b></div></div>
-    <div class="kpi"><div class="k">Return on the budget change</div><div class="big">${perDollar == null ? "-" : perDollar.toFixed(1) + "x"}${pctChip(gmvChg, "GMV change vs keeping current spend")}</div>
-      <div class="rng"><span>GMV change vs current spend</span><b class="${sign(gmvChg)}">${plus(gmvChg)}${(gmvChg * 100).toFixed(1)}%</b></div>
+    <div class="kpi"><div class="k">Return on the budget change</div><div class="big">${perDollar == null ? "-" : perDollar.toFixed(1) + "x"}${dSpend === 0 ? "" : pctChip(gmvChg, "GMV change vs keeping current spend")}</div>
+      <div class="rng"><span>GMV change</span><b class="${sign(gmvChg)}">${plus(gmvChg)}${(gmvChg * 100).toFixed(1)}%</b></div>
       <div class="rng"><span>Spend change</span><b>${plus(spendChg)}${(spendChg * 100).toFixed(1)}%</b></div>
-      <div class="rng"><span>GMV per $1 of spend change</span><b>${perDollar == null ? "same total" : "in window"}</b></div>
-      <div class="rng"><span>Est. gross profit change at ${P.margin}%</span><b class="${dSpend === 0 ? "" : sign(gp)}">${dSpend === 0 ? "-" : plus(gp) + fmtK(gp)}</b></div></div>`;
+      <div class="rng"><span>Gross profit at ${P.margin}% margin</span><b class="${dSpend === 0 ? "" : sign(gp)}">${dSpend === 0 ? "-" : plus(gp) + fmtK(gp)}</b></div></div>`;
 }
 
 function renderChart(R) {
@@ -753,7 +822,7 @@ async function initTeam() {
 
 function update() {
   const R = compute(P);
-  renderShares(); renderKpis(R); renderChart(R); renderWeeks(R);
+  renderShares(); renderDr(); renderKpis(R); renderChart(R); renderWeeks(R);
   save();
 }
 
