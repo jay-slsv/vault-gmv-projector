@@ -212,6 +212,33 @@ ul.assume { margin: 0; padding-left: 18px; display: flex; flex-direction: column
       </div>
 
       <div class="group">
+        <label class="lbl">Cash assumptions (%)</label>
+        <p class="hint">Measured Aug 16 - Sep 12 against actual GMV. Expected is Sep 6-12 (inventory: 4-week average); low and high span the four weeks.</p>
+        <div class="grid-in mult">
+          <span class="h">&nbsp;</span><span class="h">expected</span><span class="h">low</span><span class="h">high</span>
+          <span>Cash in per $ of signup-day GMV</span>
+          <input type="number" step="0.5" min="0" max="100" data-cash="cashD0" data-w="exp" aria-label="Cash in percent of signup-day GMV expected">
+          <input type="number" step="0.5" min="0" max="100" data-cash="cashD0" data-w="lo" aria-label="Cash in percent of signup-day GMV low">
+          <input type="number" step="0.5" min="0" max="100" data-cash="cashD0" data-w="hi" aria-label="Cash in percent of signup-day GMV high">
+          <span>Cash in per $ of repeat GMV</span>
+          <input type="number" step="0.5" min="0" max="100" data-cash="cashOld" data-w="exp" aria-label="Cash in percent of repeat GMV expected">
+          <input type="number" step="0.5" min="0" max="100" data-cash="cashOld" data-w="lo" aria-label="Cash in percent of repeat GMV low">
+          <input type="number" step="0.5" min="0" max="100" data-cash="cashOld" data-w="hi" aria-label="Cash in percent of repeat GMV high">
+          <span>Withdrawals, % of cash in</span>
+          <input type="number" step="0.5" min="0" max="100" data-cash="wd" data-w="exp" aria-label="Withdrawals percent of cash in expected">
+          <input type="number" step="0.5" min="0" max="100" data-cash="wd" data-w="lo" aria-label="Withdrawals percent of cash in low">
+          <input type="number" step="0.5" min="0" max="100" data-cash="wd" data-w="hi" aria-label="Withdrawals percent of cash in high">
+          <span>Inventory buying, % of GMV</span>
+          <input type="number" step="0.5" min="0" max="100" data-cash="inv" data-w="exp" aria-label="Inventory buying percent of GMV expected">
+          <input type="number" step="0.5" min="0" max="100" data-cash="inv" data-w="lo" aria-label="Inventory buying percent of GMV low">
+          <input type="number" step="0.5" min="0" max="100" data-cash="inv" data-w="hi" aria-label="Inventory buying percent of GMV high">
+        </div>
+        <h3 style="margin-top:4px">Return per $1 of spend, signup day</h3>
+        <div class="grid-in mult" id="cashRoas"></div>
+        <p class="hint">Net cash flow uses the admin Financials definition: card payments + wallet top-ups − withdrawals − ad spend − inventory purchases. Min-max takes the worse (or better) end of every cash line at once.</p>
+      </div>
+
+      <div class="group">
         <label class="lbl">Horizon</label>
         <div class="seg" role="group" aria-label="Projection horizon">
           <button type="button" data-h="30" aria-pressed="false">30 days</button>
@@ -286,6 +313,7 @@ ul.assume { margin: 0; padding-left: 18px; display: flex; flex-direction: column
           <li><b>Apple Search Ads is demand-capped.</b> It already underspends its budget, so adding budget there buys bids, not volume.</li>
           <li><b>Channel returns use DB first-touch attribution, which misses some paid signups.</b> Those users sit in organic, so organic lift partly stands in for unrecorded paid users.</li>
           <li><b>Meta and Liftoff are $0 by default.</b> Meta is restricted; its multiple is the last clean read (Aug 30-Sep 1). Liftoff has no spend data, so its multiple is a placeholder.</li>
+          <li><b>Net cash flow follows the admin Financials definition.</b> Cash in = card payments + wallet top-ups, modelled as a share of signup-day GMV and of repeat GMV (new users bring fresh cash, older users mostly recycle wallet credit). Withdrawals are a share of cash in, inventory buying a share of GMV, and ad spend is your input. Inventory buying is lumpy week to week (1.6% to 8.1% of GMV in the last 4 weeks), so weekly cash swings more than the model shows.</li>
           <li><b>GMV is not profit.</b> About 80% of GMV is wallet recycling. The gross profit line uses your margin input (12% ≈ realized margin after shipped cards) and only counts GMV inside the window, so it understates the long-run value of spend near the end of the window.</li>
           <li><b>Existing users</b> are aged forward on the same cohort curves, scaled by the repeat-spend factor. Users who signed up before Mar 1 add a flat ~$250/day.</li>
         </ul>
@@ -295,7 +323,7 @@ ul.assume { margin: 0; padding-left: 18px; display: flex; flex-direction: column
 </div>
 
 <script>
-const M = {"proj_start":"2026-09-13","h_max":90,"existing":[185893,168820,159951,152032,144643,139261,134875,131173,127996,124841,122028,119430,117136,115123,112974,110889,109084,107412,105920,104563,103296,102371,101482,100644,100053,99327,98635,98080,97361,96730,96101,95352,94630,93924,93272,92712,92037,91271,90674,90220,89822,89231,88560,88242,88074,87809,87430,87027,86731,86652,86401,86237,85952,85755,85707,85847,85874,85790,85633,85422,85383,85377,85133,84782,84390,84127,84053,83844,83584,83527,83596,83880,83978,83716,83523,83422,83295,83164,82909,82537,82232,82069,81849,81533,81063,80614,80446,80345,80081,79743],"curves":{"Meta":[1.0,0.16522,0.08572,0.07845,0.07335,0.05407,0.04571,0.04047,0.03565,0.03238,0.02986,0.02799,0.02676,0.02466,0.02359,0.02258,0.02164,0.02105,0.01892,0.01845,0.01748,0.01822,0.01802,0.01786,0.0169,0.01703,0.01738,0.01782,0.01609,0.01507,0.01453,0.01512,0.01491,0.01361,0.01289,0.01276,0.01265,0.0127,0.01156,0.01126,0.01121,0.01086,0.0111,0.01106,0.01049,0.01125,0.01134,0.01076,0.01057,0.01036,0.01025,0.01029,0.00934,0.00906,0.0093,0.01058,0.01018,0.00987,0.01051,0.01253,0.01416,0.01382,0.01513,0.01523,0.01588,0.01486,0.01289,0.01128,0.01126,0.00974,0.01047,0.00992,0.00982,0.01017,0.00951,0.00975,0.00847,0.00725,0.00769,0.00749,0.00681,0.00669,0.00714,0.00947,0.0122,0.01232,0.01268,0.01355,0.01371,0.01268],"TikTok":[1.0,0.15738,0.07862,0.07036,0.06448,0.04543,0.03798,0.03209,0.03007,0.0291,0.02706,0.02539,0.02421,0.02029,0.02032,0.01895,0.01848,0.0179,0.01637,0.01533,0.01544,0.01385,0.01165,0.01038,0.01004,0.01142,0.01157,0.01236,0.01267,0.01273,0.01282,0.01213,0.0113,0.01127,0.00992,0.00885,0.00914,0.00808,0.00829,0.00813,0.00833,0.00809,0.00793,0.00706,0.00813,0.00825,0.00868,0.00851,0.00792,0.00665,0.00659,0.0061,0.00616,0.00546,0.00442,0.0056,0.00712,0.00743,0.00733,0.00755,0.00753,0.00696,0.00732,0.00761,0.00779,0.00749,0.00717,0.00721,0.00755,0.0074,0.00714,0.00684,0.00663,0.00676,0.00616,0.00577,0.0052,0.00529,0.00543,0.00593,0.00598,0.0061,0.0063,0.007,0.00776,0.008,0.00783,0.00783,0.00755,0.00784],"ASA":[1.0,0.14192,0.07526,0.0686,0.0636,0.04756,0.03862,0.03321,0.03104,0.02816,0.02578,0.02364,0.02124,0.02024,0.01858,0.01571,0.01569,0.01347,0.01165,0.01286,0.0126,0.01118,0.01118,0.00917,0.013,0.01358,0.01165,0.01097,0.01094,0.01064,0.01062,0.00664,0.00569,0.00489,0.00678,0.00545,0.0084,0.00842,0.0086,0.00894,0.00962,0.00745,0.00792,0.00705,0.00719,0.00682,0.00637,0.00839,0.00877,0.00998,0.00839,0.00836,0.0083,0.00812,0.00512,0.0042,0.00279,0.00218,0.00099,0.00119,0.00622,0.00606,0.00638,0.00663,0.00679,0.00653,0.00625,0.00628,0.00657,0.00645,0.00622,0.00596,0.00578,0.00589,0.00536,0.00502,0.00453,0.00461,0.00473,0.00517,0.00521,0.00532,0.00549,0.0061,0.00676,0.00697,0.00682,0.00682,0.00658,0.00683],"Snapchat":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Liftoff":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Referral":[1.0,0.14784,0.07899,0.07102,0.06472,0.04731,0.04027,0.03479,0.02806,0.02579,0.02647,0.02741,0.02588,0.0228,0.0216,0.02103,0.01827,0.01568,0.01316,0.01386,0.01414,0.01402,0.01294,0.01271,0.01099,0.0097,0.0077,0.00695,0.00672,0.00663,0.0066,0.00687,0.00693,0.00669,0.00725,0.00787,0.00717,0.0069,0.00671,0.0063,0.00581,0.00548,0.00448,0.00478,0.00452,0.00391,0.00345,0.00338,0.00286,0.003,0.00292,0.00298,0.0036,0.00428,0.00419,0.00335,0.00371,0.0029,0.00289,0.00252,0.0024,0.00339,0.00342,0.00489,0.00728,0.00942,0.00931,0.01174,0.0117,0.01176,0.00978,0.00777,0.00551,0.00555,0.00253,0.00196,0.00214,0.00208,0.00348,0.00498,0.00523,0.0061,0.00692,0.0061,0.00677,0.00697,0.00683,0.00683,0.00658,0.00683],"Organic":[1.0,0.16399,0.08496,0.0784,0.07342,0.05531,0.04691,0.04137,0.03744,0.0339,0.03102,0.02881,0.02669,0.02551,0.02406,0.02252,0.02143,0.02048,0.01941,0.01876,0.01785,0.0176,0.01773,0.01703,0.01629,0.0153,0.01465,0.01509,0.01452,0.01377,0.0138,0.0131,0.01316,0.01277,0.01169,0.0124,0.01263,0.01221,0.01307,0.01309,0.01329,0.01432,0.01416,0.01358,0.01337,0.01272,0.01217,0.01154,0.01009,0.00911,0.00899,0.00905,0.00886,0.0089,0.00915,0.00934,0.0092,0.00921,0.00915,0.00898,0.00859,0.00828,0.00843,0.00898,0.00893,0.00861,0.00889,0.00959,0.01035,0.01067,0.00979,0.0095,0.00923,0.00934,0.00848,0.00752,0.00699,0.00783,0.00784,0.00895,0.00935,0.00964,0.00983,0.01016,0.0104,0.01089,0.01037,0.00996,0.0093,0.01042]},"defaults":{"spend":{"Meta":0,"TikTok":16050,"ASA":195,"Snapchat":1009,"Liftoff":0},"mult_weekly":{"Meta":[2.36,1.88,0.78,0.13],"TikTok":[4.11,2.94,4.08,3.83],"ASA":[11.83,14.69,18.49,11.67],"Snapchat":[null,null,1.63,0.36],"Liftoff":[null,null,null,null]},"organic_d0":32010,"referral_d0":4024,"organic_signups":500,"last7_spend":{"Meta":8693,"TikTok":13036,"ASA":222,"Snapchat":829,"Liftoff":0},"meta_clean_mult":1.78},"k_weekly":[{"week_start":"2026-06-07","k":1.089},{"week_start":"2026-06-14","k":1.137},{"week_start":"2026-06-21","k":1.026},{"week_start":"2026-06-28","k":0.997},{"week_start":"2026-07-05","k":1.047},{"week_start":"2026-07-12","k":1.071},{"week_start":"2026-07-19","k":0.905},{"week_start":"2026-07-26","k":0.99},{"week_start":"2026-08-02","k":0.839},{"week_start":"2026-08-09","k":0.868},{"week_start":"2026-08-16","k":0.946},{"week_start":"2026-08-23","k":1.026},{"week_start":"2026-08-30","k":0.993},{"week_start":"2026-09-06","k":0.736}],"k_recent":0.736,"error_by_h_cal":{"7":{"n":11,"mape":0.0716,"bias":-0.0685,"max_abs":0.208,"p80_abs":0.1102},"14":{"n":11,"mape":0.1118,"bias":-0.0836,"max_abs":0.2819,"p80_abs":0.1553},"21":{"n":10,"mape":0.1511,"bias":-0.1249,"max_abs":0.311,"p80_abs":0.2042},"28":{"n":9,"mape":0.1873,"bias":-0.1761,"max_abs":0.3456,"p80_abs":0.2391}},"recent_actual":[{"day":"2026-07-30","gmv":197517.0},{"day":"2026-07-31","gmv":229417.0},{"day":"2026-08-01","gmv":194246.0},{"day":"2026-08-02","gmv":202005.0},{"day":"2026-08-03","gmv":192159.0},{"day":"2026-08-04","gmv":183604.0},{"day":"2026-08-05","gmv":224521.0},{"day":"2026-08-06","gmv":258879.0},{"day":"2026-08-07","gmv":262245.0},{"day":"2026-08-08","gmv":220431.0},{"day":"2026-08-09","gmv":229064.0},{"day":"2026-08-10","gmv":230606.0},{"day":"2026-08-11","gmv":263374.0},{"day":"2026-08-12","gmv":264849.0},{"day":"2026-08-13","gmv":265551.0},{"day":"2026-08-14","gmv":289460},{"day":"2026-08-15","gmv":322623},{"day":"2026-08-16","gmv":283246},{"day":"2026-08-17","gmv":252589},{"day":"2026-08-18","gmv":250772},{"day":"2026-08-19","gmv":327709},{"day":"2026-08-20","gmv":403944},{"day":"2026-08-21","gmv":382376},{"day":"2026-08-22","gmv":285339},{"day":"2026-08-23","gmv":292247},{"day":"2026-08-24","gmv":264819},{"day":"2026-08-25","gmv":325973},{"day":"2026-08-26","gmv":358156},{"day":"2026-08-27","gmv":383035},{"day":"2026-08-28","gmv":359434},{"day":"2026-08-29","gmv":366124},{"day":"2026-08-30","gmv":393681},{"day":"2026-08-31","gmv":340807},{"day":"2026-09-01","gmv":395835},{"day":"2026-09-02","gmv":403901},{"day":"2026-09-03","gmv":389453},{"day":"2026-09-04","gmv":379911},{"day":"2026-09-05","gmv":360278},{"day":"2026-09-06","gmv":294051},{"day":"2026-09-07","gmv":288639},{"day":"2026-09-08","gmv":220183},{"day":"2026-09-09","gmv":226261},{"day":"2026-09-10","gmv":254584},{"day":"2026-09-11","gmv":262789},{"day":"2026-09-12","gmv":245830}],"elasticity":{"meta_ref_spend":22599,"fits":{"TikTok":{"b":1.144,"r2":0.953,"se":0.09,"n":10,"spend_range":[3691,91250]},"Meta":{"b":1.346,"r2":0.913,"se":0.132,"n":12,"spend_range":[27677,154714]},"Blended":{"b":1.319,"r2":0.963,"se":0.082,"n":12,"spend_range":[28151,179802]}},"suggested":{"exp":0.72,"lo":0.44,"hi":1.0}}};
+const M = {"proj_start":"2026-09-13","h_max":90,"existing":[185893,168820,159951,152032,144643,139261,134875,131173,127996,124841,122028,119430,117136,115123,112974,110889,109084,107412,105920,104563,103296,102371,101482,100644,100053,99327,98635,98080,97361,96730,96101,95352,94630,93924,93272,92712,92037,91271,90674,90220,89822,89231,88560,88242,88074,87809,87430,87027,86731,86652,86401,86237,85952,85755,85707,85847,85874,85790,85633,85422,85383,85377,85133,84782,84390,84127,84053,83844,83584,83527,83596,83880,83978,83716,83523,83422,83295,83164,82909,82537,82232,82069,81849,81533,81063,80614,80446,80345,80081,79743],"curves":{"Meta":[1.0,0.16522,0.08572,0.07845,0.07335,0.05407,0.04571,0.04047,0.03565,0.03238,0.02986,0.02799,0.02676,0.02466,0.02359,0.02258,0.02164,0.02105,0.01892,0.01845,0.01748,0.01822,0.01802,0.01786,0.0169,0.01703,0.01738,0.01782,0.01609,0.01507,0.01453,0.01512,0.01491,0.01361,0.01289,0.01276,0.01265,0.0127,0.01156,0.01126,0.01121,0.01086,0.0111,0.01106,0.01049,0.01125,0.01134,0.01076,0.01057,0.01036,0.01025,0.01029,0.00934,0.00906,0.0093,0.01058,0.01018,0.00987,0.01051,0.01253,0.01416,0.01382,0.01513,0.01523,0.01588,0.01486,0.01289,0.01128,0.01126,0.00974,0.01047,0.00992,0.00982,0.01017,0.00951,0.00975,0.00847,0.00725,0.00769,0.00749,0.00681,0.00669,0.00714,0.00947,0.0122,0.01232,0.01268,0.01355,0.01371,0.01268],"TikTok":[1.0,0.15738,0.07862,0.07036,0.06448,0.04543,0.03798,0.03209,0.03007,0.0291,0.02706,0.02539,0.02421,0.02029,0.02032,0.01895,0.01848,0.0179,0.01637,0.01533,0.01544,0.01385,0.01165,0.01038,0.01004,0.01142,0.01157,0.01236,0.01267,0.01273,0.01282,0.01213,0.0113,0.01127,0.00992,0.00885,0.00914,0.00808,0.00829,0.00813,0.00833,0.00809,0.00793,0.00706,0.00813,0.00825,0.00868,0.00851,0.00792,0.00665,0.00659,0.0061,0.00616,0.00546,0.00442,0.0056,0.00712,0.00743,0.00733,0.00755,0.00753,0.00696,0.00732,0.00761,0.00779,0.00749,0.00717,0.00721,0.00755,0.0074,0.00714,0.00684,0.00663,0.00676,0.00616,0.00577,0.0052,0.00529,0.00543,0.00593,0.00598,0.0061,0.0063,0.007,0.00776,0.008,0.00783,0.00783,0.00755,0.00784],"ASA":[1.0,0.14192,0.07526,0.0686,0.0636,0.04756,0.03862,0.03321,0.03104,0.02816,0.02578,0.02364,0.02124,0.02024,0.01858,0.01571,0.01569,0.01347,0.01165,0.01286,0.0126,0.01118,0.01118,0.00917,0.013,0.01358,0.01165,0.01097,0.01094,0.01064,0.01062,0.00664,0.00569,0.00489,0.00678,0.00545,0.0084,0.00842,0.0086,0.00894,0.00962,0.00745,0.00792,0.00705,0.00719,0.00682,0.00637,0.00839,0.00877,0.00998,0.00839,0.00836,0.0083,0.00812,0.00512,0.0042,0.00279,0.00218,0.00099,0.00119,0.00622,0.00606,0.00638,0.00663,0.00679,0.00653,0.00625,0.00628,0.00657,0.00645,0.00622,0.00596,0.00578,0.00589,0.00536,0.00502,0.00453,0.00461,0.00473,0.00517,0.00521,0.00532,0.00549,0.0061,0.00676,0.00697,0.00682,0.00682,0.00658,0.00683],"Snapchat":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Liftoff":[1.0,0.16271,0.08432,0.07744,0.07235,0.05398,0.04566,0.04019,0.03607,0.03281,0.03022,0.02825,0.02645,0.02484,0.02356,0.02218,0.02114,0.02023,0.01876,0.01824,0.0174,0.01739,0.0173,0.01673,0.01602,0.01549,0.01511,0.01549,0.01461,0.01384,0.01368,0.01333,0.01325,0.01258,0.01174,0.01208,0.01226,0.01199,0.01216,0.01208,0.01221,0.01267,0.01264,0.01224,0.01196,0.01177,0.01145,0.01092,0.00995,0.00928,0.00913,0.00917,0.00878,0.00873,0.00888,0.00936,0.00917,0.00906,0.00918,0.0097,0.00993,0.00968,0.01018,0.01058,0.01084,0.01042,0.00998,0.01002,0.01049,0.0103,0.00993,0.00952,0.00922,0.00941,0.00856,0.00802,0.00723,0.00736,0.00755,0.00825,0.00832,0.00849,0.00876,0.00974,0.0108,0.01112,0.0109,0.01089,0.0105,0.0109],"Referral":[1.0,0.14784,0.07899,0.07102,0.06472,0.04731,0.04027,0.03479,0.02806,0.02579,0.02647,0.02741,0.02588,0.0228,0.0216,0.02103,0.01827,0.01568,0.01316,0.01386,0.01414,0.01402,0.01294,0.01271,0.01099,0.0097,0.0077,0.00695,0.00672,0.00663,0.0066,0.00687,0.00693,0.00669,0.00725,0.00787,0.00717,0.0069,0.00671,0.0063,0.00581,0.00548,0.00448,0.00478,0.00452,0.00391,0.00345,0.00338,0.00286,0.003,0.00292,0.00298,0.0036,0.00428,0.00419,0.00335,0.00371,0.0029,0.00289,0.00252,0.0024,0.00339,0.00342,0.00489,0.00728,0.00942,0.00931,0.01174,0.0117,0.01176,0.00978,0.00777,0.00551,0.00555,0.00253,0.00196,0.00214,0.00208,0.00348,0.00498,0.00523,0.0061,0.00692,0.0061,0.00677,0.00697,0.00683,0.00683,0.00658,0.00683],"Organic":[1.0,0.16399,0.08496,0.0784,0.07342,0.05531,0.04691,0.04137,0.03744,0.0339,0.03102,0.02881,0.02669,0.02551,0.02406,0.02252,0.02143,0.02048,0.01941,0.01876,0.01785,0.0176,0.01773,0.01703,0.01629,0.0153,0.01465,0.01509,0.01452,0.01377,0.0138,0.0131,0.01316,0.01277,0.01169,0.0124,0.01263,0.01221,0.01307,0.01309,0.01329,0.01432,0.01416,0.01358,0.01337,0.01272,0.01217,0.01154,0.01009,0.00911,0.00899,0.00905,0.00886,0.0089,0.00915,0.00934,0.0092,0.00921,0.00915,0.00898,0.00859,0.00828,0.00843,0.00898,0.00893,0.00861,0.00889,0.00959,0.01035,0.01067,0.00979,0.0095,0.00923,0.00934,0.00848,0.00752,0.00699,0.00783,0.00784,0.00895,0.00935,0.00964,0.00983,0.01016,0.0104,0.01089,0.01037,0.00996,0.0093,0.01042]},"defaults":{"spend":{"Meta":0,"TikTok":16050,"ASA":195,"Snapchat":1009,"Liftoff":0},"mult_weekly":{"Meta":[2.36,1.88,0.78,0.13],"TikTok":[4.11,2.94,4.08,3.83],"ASA":[11.83,14.69,18.49,11.67],"Snapchat":[null,null,1.63,0.36],"Liftoff":[null,null,null,null]},"organic_d0":32010,"referral_d0":4024,"organic_signups":500,"last7_spend":{"Meta":8693,"TikTok":13036,"ASA":222,"Snapchat":829,"Liftoff":0},"meta_clean_mult":1.78},"k_weekly":[{"week_start":"2026-06-07","k":1.089},{"week_start":"2026-06-14","k":1.137},{"week_start":"2026-06-21","k":1.026},{"week_start":"2026-06-28","k":0.997},{"week_start":"2026-07-05","k":1.047},{"week_start":"2026-07-12","k":1.071},{"week_start":"2026-07-19","k":0.905},{"week_start":"2026-07-26","k":0.99},{"week_start":"2026-08-02","k":0.839},{"week_start":"2026-08-09","k":0.868},{"week_start":"2026-08-16","k":0.946},{"week_start":"2026-08-23","k":1.026},{"week_start":"2026-08-30","k":0.993},{"week_start":"2026-09-06","k":0.736}],"k_recent":0.736,"error_by_h_cal":{"7":{"n":11,"mape":0.0716,"bias":-0.0685,"max_abs":0.208,"p80_abs":0.1102},"14":{"n":11,"mape":0.1118,"bias":-0.0836,"max_abs":0.2819,"p80_abs":0.1553},"21":{"n":10,"mape":0.1511,"bias":-0.1249,"max_abs":0.311,"p80_abs":0.2042},"28":{"n":9,"mape":0.1873,"bias":-0.1761,"max_abs":0.3456,"p80_abs":0.2391}},"recent_actual":[{"day":"2026-07-30","gmv":197517.0},{"day":"2026-07-31","gmv":229417.0},{"day":"2026-08-01","gmv":194246.0},{"day":"2026-08-02","gmv":202005.0},{"day":"2026-08-03","gmv":192159.0},{"day":"2026-08-04","gmv":183604.0},{"day":"2026-08-05","gmv":224521.0},{"day":"2026-08-06","gmv":258879.0},{"day":"2026-08-07","gmv":262245.0},{"day":"2026-08-08","gmv":220431.0},{"day":"2026-08-09","gmv":229064.0},{"day":"2026-08-10","gmv":230606.0},{"day":"2026-08-11","gmv":263374.0},{"day":"2026-08-12","gmv":264849.0},{"day":"2026-08-13","gmv":265551.0},{"day":"2026-08-14","gmv":289460},{"day":"2026-08-15","gmv":322623},{"day":"2026-08-16","gmv":283246},{"day":"2026-08-17","gmv":252589},{"day":"2026-08-18","gmv":250772},{"day":"2026-08-19","gmv":327709},{"day":"2026-08-20","gmv":403944},{"day":"2026-08-21","gmv":382376},{"day":"2026-08-22","gmv":285339},{"day":"2026-08-23","gmv":292247},{"day":"2026-08-24","gmv":264819},{"day":"2026-08-25","gmv":325973},{"day":"2026-08-26","gmv":358156},{"day":"2026-08-27","gmv":383035},{"day":"2026-08-28","gmv":359434},{"day":"2026-08-29","gmv":366124},{"day":"2026-08-30","gmv":393681},{"day":"2026-08-31","gmv":340807},{"day":"2026-09-01","gmv":395835},{"day":"2026-09-02","gmv":403901},{"day":"2026-09-03","gmv":389453},{"day":"2026-09-04","gmv":379911},{"day":"2026-09-05","gmv":360278},{"day":"2026-09-06","gmv":294051},{"day":"2026-09-07","gmv":288639},{"day":"2026-09-08","gmv":220183},{"day":"2026-09-09","gmv":226261},{"day":"2026-09-10","gmv":254584},{"day":"2026-09-11","gmv":262789},{"day":"2026-09-12","gmv":245830}],"elasticity":{"meta_ref_spend":22599,"fits":{"TikTok":{"b":1.144,"r2":0.953,"se":0.09,"n":10,"spend_range":[3691,91250]},"Meta":{"b":1.346,"r2":0.913,"se":0.132,"n":12,"spend_range":[27677,154714]},"Blended":{"b":1.319,"r2":0.963,"se":0.082,"n":12,"spend_range":[28151,179802]}},"suggested":{"exp":0.72,"lo":0.44,"hi":1.0}},"cash":{"window":"2026-08-16..2026-09-12","r_cash_d0":{"exp":0.2768,"lo":0.2768,"hi":0.3224},"r_cash_old":{"exp":0.33,"lo":0.302,"hi":0.3491},"r_wd_cashin":{"exp":0.405,"lo":0.3698,"hi":0.4235},"r_inv_gmv":{"exp":0.0534,"lo":0.0164,"hi":0.0808},"recent_daily_net":11087,"recent_daily_cash_in":78656}};
 
 const CHS = [
   { key: "TikTok", label: "TikTok", color: "var(--s2)" },
@@ -341,6 +369,15 @@ function defaultMult(key) {
   if (key === "Liftoff" || !w.length) return { exp: 2.4, lo: 1.5, hi: 3.8 };
   return { exp: lastNonNull(M.defaults.mult_weekly[key]), lo: Math.min(...w), hi: Math.max(...w) };
 }
+const CASH_KEYS = [["cashD0", "r_cash_d0"], ["cashOld", "r_cash_old"], ["wd", "r_wd_cashin"], ["inv", "r_inv_gmv"]];
+function defaultCash() {
+  const out = {};
+  CASH_KEYS.forEach(([k, src]) => {
+    const r = M.cash[src];
+    out[k] = { exp: Math.round(r.exp * 1000) / 10, lo: Math.round(r.lo * 1000) / 10, hi: Math.round(r.hi * 1000) / 10 };
+  });
+  return out;
+}
 function defaults() {
   const mult = {};
   CHS.forEach(c => { mult[c.key] = defaultMult(c.key); });
@@ -349,6 +386,7 @@ function defaults() {
     spend: Object.assign({}, SPEND0), mult,
     e: { exp: 0.5, lo: 0.25, hi: 1.0 },
     b: { exp: 1, lo: 1, hi: 1 },
+    cash: defaultCash(),
     k: { exp: k, lo: Math.round((k - 0.09) * 100) / 100, hi: Math.round((k + 0.09) * 100) / 100 },
     orgBase: M.defaults.organic_d0 + M.defaults.referral_d0,
     horizon: 60, margin: 12,
@@ -367,6 +405,9 @@ function sanitize(raw) {
     out.e[w] = num(raw.e && raw.e[w], d.e[w]);
     out.k[w] = num(raw.k && raw.k[w], d.k[w]);
     out.b[w] = Math.min(1.2, Math.max(0.1, num(raw.b && raw.b[w], d.b[w])));
+    CASH_KEYS.forEach(([ck]) => {
+      out.cash[ck][w] = Math.min(100, num(raw.cash && raw.cash[ck] && raw.cash[ck][w], d.cash[ck][w]));
+    });
   });
   out.orgBase = num(raw.orgBase, d.orgBase);
   out.horizon = [30, 60, 90].includes(raw.horizon) ? raw.horizon : d.horizon;
@@ -436,7 +477,22 @@ function run(p, which, spend) {
     gmv.push(existing + paid + org);
     parts.push({ existing, paid, org });
   }
-  return { gmv, parts };
+  const d0Total = CHS.reduce((a, c) => a + d0[c.key], 0) + orgD0;
+  return { gmv, parts, d0Total };
+}
+
+function cashDay(p, gmv, d0g, spendTotal, which, errFactor) {
+  const c = p.cash;
+  const pick = (key, worseIsHigh) => {
+    if (which === "exp") return c[key].exp / 100;
+    const worse = worseIsHigh ? c[key].hi : c[key].lo, better = worseIsHigh ? c[key].lo : c[key].hi;
+    return (which === "lo" ? worse : better) / 100;
+  };
+  const g = gmv * errFactor, d0 = Math.min(d0g, gmv) * errFactor;
+  const cashIn = pick("cashD0", false) * d0 + pick("cashOld", false) * (g - d0);
+  const withdrawals = pick("wd", true) * cashIn;
+  const inventory = pick("inv", true) * g;
+  return { cashIn, withdrawals, inventory, spend: spendTotal, net: cashIn - withdrawals - inventory - spendTotal };
 }
 
 const E = M.error_by_h_cal;
@@ -457,26 +513,46 @@ function compute(p) {
   const N = p.horizon;
   const exp = run(p, "exp", p.spend), lo = run(p, "lo", p.spend), hi = run(p, "hi", p.spend);
   const base = run(p, "exp", SPEND0);
+  const spendTotal = totalOf(p.spend);
   const days = [];
   for (let i = 0; i < N; i++) {
     const h = i + 1, m = errAt(h, "mape"), p80 = errAt(h, "p80_abs");
+    const cash = cashDay(p, exp.gmv[i], exp.d0Total, spendTotal, "exp", 1);
+    const cashBase = cashDay(p, base.gmv[i], base.d0Total, S0, "exp", 1);
     days.push({
       day: addDays(M.proj_start, i), exp: exp.gmv[i],
       likelyLo: exp.gmv[i] * (1 - m), likelyHi: exp.gmv[i] * (1 + m),
       min: lo.gmv[i] * (1 - p80), max: hi.gmv[i] * (1 + p80),
       base: base.gmv[i], parts: exp.parts[i],
+      cash, baseNet: cashBase.net,
+      netLikelyLo: cashDay(p, exp.gmv[i], exp.d0Total, spendTotal, "exp", 1 - m).net,
+      netLikelyHi: cashDay(p, exp.gmv[i], exp.d0Total, spendTotal, "exp", 1 + m).net,
+      netMin: cashDay(p, lo.gmv[i], lo.d0Total, spendTotal, "lo", 1 - p80).net,
+      netMax: cashDay(p, hi.gmv[i], hi.d0Total, spendTotal, "hi", 1 + p80).net,
     });
   }
   const sumK = key => days.reduce((a, x) => a + x[key], 0);
+  const sumCash = key => days.reduce((a, x) => a + x.cash[key], 0);
   const expSum = sumK("exp");
   const mN = errAt(N, "mape"), pN = errAt(N, "p80_abs");
+  const loSum = lo.gmv.slice(0, N).reduce((a, v) => a + v, 0), hiSum = hi.gmv.slice(0, N).reduce((a, v) => a + v, 0);
+  const cashIn = sumCash("cashIn"), withdrawals = sumCash("withdrawals"), inventory = sumCash("inventory"), spendN = spendTotal * N;
+  const netOf = (gmvSum, d0Sum, which, f) => {
+    const r = cashDay(p, gmvSum, d0Sum, spendN, which, f);
+    return r.net;
+  };
   const tot = {
     exp: expSum, likelyLo: expSum * (1 - mN), likelyHi: expSum * (1 + mN),
-    min: lo.gmv.slice(0, N).reduce((a, v) => a + v, 0) * (1 - pN),
-    max: hi.gmv.slice(0, N).reduce((a, v) => a + v, 0) * (1 + pN),
+    min: loSum * (1 - pN), max: hiSum * (1 + pN),
     base: sumK("base"), mape: mN, p80: pN,
+    cash: {
+      cashIn, withdrawals, inventory, spend: spendN, net: cashIn - withdrawals - inventory - spendN,
+      base: sumK("baseNet"),
+      likelyLo: netOf(expSum, exp.d0Total * N, "exp", 1 - mN), likelyHi: netOf(expSum, exp.d0Total * N, "exp", 1 + mN),
+      min: netOf(loSum, lo.d0Total * N, "lo", 1 - pN), max: netOf(hiSum, hi.d0Total * N, "hi", 1 + pN),
+    },
   };
-  return { N, days, tot, total: totalOf(p.spend) };
+  return { N, days, tot, total: spendTotal };
 }
 
 // ---------- controls ----------
@@ -527,6 +603,9 @@ function buildControls() {
     const [e, lo, hi] = btn.dataset.b.split(",").map(Number);
     P.b = { exp: e, lo, hi }; sync(); update();
   });
+  document.querySelectorAll("[data-cash]").forEach(i => i.addEventListener("input", () => {
+    P.cash[i.dataset.cash][i.dataset.w] = Math.min(100, Math.max(0, +i.value || 0)); update();
+  }));
   $("orgBase").addEventListener("input", () => { P.orgBase = Math.max(0, +$("orgBase").value || 0); update(); });
   $("margin").addEventListener("input", () => { P.margin = Math.min(100, Math.max(0, +$("margin").value || 0)); update(); });
   document.querySelectorAll("[data-h]").forEach(b => b.addEventListener("click", () => { P.horizon = +b.dataset.h; sync(); update(); }));
@@ -540,6 +619,7 @@ function sync() {
   document.querySelectorAll("#multGrid [data-mult]").forEach(i => { i.value = P.mult[i.dataset.mult][i.dataset.w]; });
   $("eExp").value = P.e.exp; $("eLo").value = P.e.lo; $("eHi").value = P.e.hi;
   $("bExp").value = P.b.exp; $("bLo").value = P.b.lo; $("bHi").value = P.b.hi;
+  document.querySelectorAll("[data-cash]").forEach(i => { i.value = P.cash[i.dataset.cash][i.dataset.w]; });
   $("kExp").value = P.k.exp; $("kLo").value = P.k.lo; $("kHi").value = P.k.hi;
   $("orgBase").value = Math.round(P.orgBase); $("margin").value = P.margin;
   document.querySelectorAll("[data-h]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.h === P.horizon)));
@@ -570,6 +650,25 @@ function renderDr() {
       <span class="val">${fmtK(s)}</span><span class="val">${avg.toFixed(2)}x</span><span class="val">${marg.toFixed(2)}x</span>`;
   });
   $("drTable").innerHTML = h;
+}
+
+function renderCashRoas() {
+  const cD0 = P.cash.cashD0.exp / 100;
+  let h = `<span class="h">channel</span><span class="h">GMV</span><span class="h">cash</span><span class="h">next $1 cash</span>`;
+  let spendSum = 0, gmvSum = 0;
+  CHS.forEach(c => {
+    const s = +P.spend[c.key] || 0;
+    if (!(s > 0)) return;
+    const eff = effectiveSpend(P, "exp", c.key, s);
+    const avg = (eff / s) * P.mult[c.key].exp;
+    const ref = REF[c.key];
+    const marg = ref > 0 ? P.mult[c.key].exp * P.b.exp * Math.pow(s / ref, P.b.exp - 1) : P.mult[c.key].exp;
+    spendSum += s; gmvSum += eff * P.mult[c.key].exp;
+    h += `<span class="name"><i style="background:${c.color}"></i>${c.label}</span>
+      <span class="val">${avg.toFixed(2)}x</span><span class="val">${(avg * cD0).toFixed(2)}x</span><span class="val">${(marg * cD0).toFixed(2)}x</span>`;
+  });
+  if (spendSum > 0) h += `<span class="name"><b>All paid</b></span><span class="val"><b>${(gmvSum / spendSum).toFixed(2)}x</b></span><span class="val"><b>${((gmvSum / spendSum) * cD0).toFixed(2)}x</b></span><span class="val"></span>`;
+  $("cashRoas").innerHTML = h;
 }
 
 function renderShares() {
@@ -604,6 +703,15 @@ function renderKpis(R) {
     <div class="kpi"><div class="k">vs. current spend (${fmt$(S0)}/day)</div><div class="big ${sign(dGmv)}">${plus(dGmv)}${fmtK(dGmv)}</div>
       <div class="rng"><span>Ad spend change</span><b>${plus(dSpend)}${fmtK(dSpend)}</b></div>
       <div class="rng"><span>Day ${N} run-rate change</span><b class="${sign(endExp - endBase)}">${plus(endExp - endBase)}${fmtK(endExp - endBase)}/day</b></div></div>
+    <div class="kpi"><div class="k">Net cash flow, next ${N} days</div><div class="big ${sign(t.cash.net)}">${plus(t.cash.net)}${fmtK(t.cash.net)}<span class="chg ${sign(t.cash.net)}">${t.cash.net >= 0 ? "cash positive" : "cash negative"}</span></div>
+      <div class="rng"><span>Per day</span><b class="${sign(t.cash.net)}">${plus(t.cash.net)}${fmtK(t.cash.net / N)}</b></div>
+      <div class="rng"><span>Cash in (card + top-ups)</span><b>+${fmtK(t.cash.cashIn)}</b></div>
+      <div class="rng"><span>Withdrawals</span><b>${fmtK(-t.cash.withdrawals)}</b></div>
+      <div class="rng"><span>Ad spend</span><b>${fmtK(-t.cash.spend)}</b></div>
+      <div class="rng"><span>Inventory buying</span><b>${fmtK(-t.cash.inventory)}</b></div>
+      <div class="rng"><span>Likely</span><b>${fmtK(t.cash.likelyLo)} - ${fmtK(t.cash.likelyHi)}</b></div>
+      <div class="rng"><span>Min - max</span><b>${fmtK(t.cash.min)} - ${fmtK(t.cash.max)}</b></div>
+      <div class="rng"><span>vs current spend</span><b class="${sign(t.cash.net - t.cash.base)}">${plus(t.cash.net - t.cash.base)}${fmtK(t.cash.net - t.cash.base)}</b></div></div>
     <div class="kpi"><div class="k">Return on the budget change</div><div class="big">${perDollar == null ? "-" : perDollar.toFixed(1) + "x"}${dSpend === 0 ? "" : pctChip(gmvChg, "GMV change vs keeping current spend")}</div>
       <div class="rng"><span>GMV change</span><b class="${sign(gmvChg)}">${plus(gmvChg)}${(gmvChg * 100).toFixed(1)}%</b></div>
       <div class="rng"><span>Spend change</span><b>${plus(spendChg)}${(spendChg * 100).toFixed(1)}%</b></div>
@@ -689,19 +797,21 @@ function renderChart(R) {
 }
 
 function renderWeeks(R) {
-  let h = `<thead><tr><th>Week</th><th>Ad spend</th><th>Projected GMV</th><th>Likely range</th><th>Min - max</th><th>At current spend</th><th>Difference</th></tr></thead><tbody>`;
+  let h = `<thead><tr><th>Week</th><th>Ad spend</th><th>Projected GMV</th><th>Likely range</th><th>Min - max</th><th>At current spend</th><th>Difference</th><th>Net cash flow</th></tr></thead><tbody>`;
+  const cashCell = v => `<td class="${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${fmtK(v)}</td>`;
   for (let s = 0; s < R.N; s += 7) {
     const chunk = R.days.slice(s, s + 7), n = chunk.length;
     const sum = k => chunk.reduce((a, d) => a + d[k], 0);
     const expW = sum("exp"), diff = expW - sum("base");
+    const netW = chunk.reduce((a, d) => a + d.cash.net, 0);
     h += `<tr><td>${dLabel(chunk[0].day)} - ${dLabel(chunk[n - 1].day)}${n < 7 ? ` <span class="hint">(${n}d)</span>` : ""}</td>
       <td>${fmtK(R.total * n)}</td><td>${fmtK(expW)}</td>
       <td>${fmtK(sum("likelyLo"))} - ${fmtK(sum("likelyHi"))}</td>
       <td>${fmtK(sum("min"))} - ${fmtK(sum("max"))}</td><td>${fmtK(sum("base"))}</td>
-      <td class="${diff >= 0 ? "pos" : "neg"}">${diff >= 0 ? "+" : ""}${fmtK(diff)}</td></tr>`;
+      <td class="${diff >= 0 ? "pos" : "neg"}">${diff >= 0 ? "+" : ""}${fmtK(diff)}</td>${cashCell(netW)}</tr>`;
   }
   const t = R.tot;
-  h += `<tr class="total"><td>${R.N}-day total</td><td>${fmtK(R.total * R.N)}</td><td>${fmtK(t.exp)}</td><td>${fmtK(t.likelyLo)} - ${fmtK(t.likelyHi)}</td><td>${fmtK(t.min)} - ${fmtK(t.max)}</td><td>${fmtK(t.base)}</td><td class="${t.exp - t.base >= 0 ? "pos" : "neg"}">${t.exp - t.base >= 0 ? "+" : ""}${fmtK(t.exp - t.base)}</td></tr>`;
+  h += `<tr class="total"><td>${R.N}-day total</td><td>${fmtK(R.total * R.N)}</td><td>${fmtK(t.exp)}</td><td>${fmtK(t.likelyLo)} - ${fmtK(t.likelyHi)}</td><td>${fmtK(t.min)} - ${fmtK(t.max)}</td><td>${fmtK(t.base)}</td><td class="${t.exp - t.base >= 0 ? "pos" : "neg"}">${t.exp - t.base >= 0 ? "+" : ""}${fmtK(t.exp - t.base)}</td>${cashCell(t.cash.net)}</tr>`;
   $("weekTable").innerHTML = h + "</tbody>";
 }
 
@@ -822,7 +932,7 @@ async function initTeam() {
 
 function update() {
   const R = compute(P);
-  renderShares(); renderDr(); renderKpis(R); renderChart(R); renderWeeks(R);
+  renderShares(); renderDr(); renderCashRoas(); renderKpis(R); renderChart(R); renderWeeks(R);
   save();
 }
 
