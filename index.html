@@ -93,7 +93,8 @@ main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .kpi { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
 .kpi .k { font-size: 12.5px; color: var(--muted); }
-.kpi .big { font-size: 28px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpi .big { font-size: 28px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.kpi .big .chg { font-size: 14px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--callout); white-space: nowrap; }
 .kpi .rng { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 8px; }
 .kpi .rng b { font-weight: 600; color: var(--ink); }
 .pos { color: var(--up); } .neg { color: var(--down); }
@@ -516,17 +517,26 @@ function renderKpis(R) {
   const endExp = R.days[N - 1].exp, endBase = R.days[N - 1].base;
   const sign = v => v >= 0 ? "pos" : "neg";
   const plus = v => (v >= 0 ? "+" : "");
+  const pctChip = (v, label) => `<span class="chg ${sign(v)}" title="${label}">${v >= 0 ? "+" : "−"}${Math.abs(v * 100).toFixed(1)}%</span>`;
+  const recent = M.recent_actual.slice(-3);
+  const currentDaily = recent.reduce((a, r) => a + r.gmv, 0) / recent.length;
+  const avgChg = t.exp / N / currentDaily - 1;
+  const gmvChg = t.base ? dGmv / t.base : 0;
+  const spendChg = S0 ? R.total / S0 - 1 : 0;
   $("kpis").innerHTML = `
     <div class="kpi"><div class="k">Projected GMV, next ${N} days</div><div class="big">${fmtK(t.exp)}</div>
       <div class="rng"><span>Likely (±${Math.round(t.mape * 100)}%)</span><b>${fmtK(t.likelyLo)} - ${fmtK(t.likelyHi)}</b></div>
       <div class="rng"><span>Min - max</span><b>${fmtK(t.min)} - ${fmtK(t.max)}</b></div></div>
-    <div class="kpi"><div class="k">Average GMV per day</div><div class="big">${fmtK(t.exp / N)}</div>
+    <div class="kpi"><div class="k">Average GMV per day</div><div class="big">${fmtK(t.exp / N)}${pctChip(avgChg, "vs current GMV per day")}</div>
+      <div class="rng"><span>vs current (${dLabel(recent[0].day)}-${dLabel(recent[recent.length - 1].day).replace(/^\w+ /, "")} avg)</span><b>${fmtK(currentDaily)}</b></div>
       <div class="rng"><span>Likely</span><b>${fmtK(t.likelyLo / N)} - ${fmtK(t.likelyHi / N)}</b></div>
-      <div class="rng"><span>Day ${N} run-rate</span><b>${fmtK(endExp)}</b></div></div>
+      <div class="rng"><span>Day ${N} run-rate</span><b>${fmtK(endExp)} <span class="${sign(endExp / currentDaily - 1)}">(${plus(endExp / currentDaily - 1)}${((endExp / currentDaily - 1) * 100).toFixed(1)}%)</span></b></div></div>
     <div class="kpi"><div class="k">vs. current spend (${fmt$(S0)}/day)</div><div class="big ${sign(dGmv)}">${plus(dGmv)}${fmtK(dGmv)}</div>
       <div class="rng"><span>Ad spend change</span><b>${plus(dSpend)}${fmtK(dSpend)}</b></div>
       <div class="rng"><span>Day ${N} run-rate change</span><b class="${sign(endExp - endBase)}">${plus(endExp - endBase)}${fmtK(endExp - endBase)}/day</b></div></div>
-    <div class="kpi"><div class="k">Return on the budget change</div><div class="big">${perDollar == null ? "-" : perDollar.toFixed(1) + "x"}</div>
+    <div class="kpi"><div class="k">Return on the budget change</div><div class="big">${perDollar == null ? "-" : perDollar.toFixed(1) + "x"}${pctChip(gmvChg, "GMV change vs keeping current spend")}</div>
+      <div class="rng"><span>GMV change vs current spend</span><b class="${sign(gmvChg)}">${plus(gmvChg)}${(gmvChg * 100).toFixed(1)}%</b></div>
+      <div class="rng"><span>Spend change</span><b>${plus(spendChg)}${(spendChg * 100).toFixed(1)}%</b></div>
       <div class="rng"><span>GMV per $1 of spend change</span><b>${perDollar == null ? "same total" : "in window"}</b></div>
       <div class="rng"><span>Est. gross profit change at ${P.margin}%</span><b class="${dSpend === 0 ? "" : sign(gp)}">${dSpend === 0 ? "-" : plus(gp) + fmtK(gp)}</b></div></div>`;
 }
