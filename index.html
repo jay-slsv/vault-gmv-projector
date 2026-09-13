@@ -679,8 +679,15 @@ async function initTeam() {
       const url = location.href.split("#")[0] + "#s=" + encodeInputs(P);
       try { history.replaceState(null, "", url); } catch (e) { /* ignore */ }
       $("linkOut").value = url;
-      try { await navigator.clipboard.writeText(url); setStatus("Link copied."); }
-      catch (e) { $("linkOut").select(); setStatus("Copy the link from the box."); }
+      $("linkOut").select();
+      setStatus("Link ready. Copy it from the box if it isn't already on your clipboard.");
+      try {
+        await Promise.race([
+          navigator.clipboard.writeText(url),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 1500)),
+        ]);
+        setStatus("Link copied to your clipboard.");
+      } catch (e) { /* the selected box stays as the fallback */ }
     });
     return;
   }
